@@ -2,6 +2,13 @@
 <html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Inventario de bebidas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ea580c">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Inventario">
 <style>
 :root{--bg:#fff7ed;--card:#fff;--tx:#292524;--mu:#78716c;--ac:#ea580c;--ac2:#fed7aa;--ok:#16a34a;--okb:#dcfce7;--bad:#dc2626;--badb:#fee2e2;--bl:#2563eb;--blb:#dbeafe;--bd:#fde4c8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1917;--card:#292524;--tx:#fafaf9;--mu:#a8a29e;--ac:#fb923c;--ac2:#431407;--ok:#4ade80;--okb:#14532d;--bad:#f87171;--badb:#450a0a;--bl:#60a5fa;--blb:#1e3a8a;--bd:#44403c}}
@@ -65,7 +72,7 @@ const MIN={"Agua":15,"Gaseosa":12,"Cerveza":12,"Otras bebidas":5,"Otros":3};
 const LBL={"Agua":"agua","Gaseosa":"gaseosas","Cerveza":"cerveza","Otras bebidas":"otras bebidas","Otros":"otros productos"};
 if(!S.seed2){S.seed2=1;const C=[["Agua","Agua",35],["Gaseosa","Coca-Cola",37],["Gaseosa","Gaseosa",24,4000],["Gaseosa","Like",8],["Otras bebidas","Gatorade",51],["Otras bebidas","Hit",40],["Otras bebidas","Pony",19],["Otras bebidas","Electrolit",6],["Otras bebidas","Vive 100",1],["Otras bebidas","Amper",2],["Cerveza","Redd's",24,6000],["Cerveza","Águila",38,5000],["Cerveza","Poker",54,5000],["Cerveza","Corona",10],["Cerveza","Los Cuates",3,3500],["Cerveza","Budweiser",12],["Cerveza","Club Colombia",4],["Otros","Papas",11],["Otros","Cepillos",11],["Otros","Nutribela",3],["Otros","Crema dental",11],["Otros","Champú",23],["Otros","Desodorantes",24],["Otros","Condones",57]];
  C.forEach((c,i)=>{if(!S.products.some(p=>p.name.toLowerCase()==c[1].toLowerCase()))S.products.push({id:Date.now()+i,name:c[1],cat:c[0],price:c[3]||0,nev:c[2],res:0})});try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
-let lr="admin",showP=false,atab="resumen",calY=new Date().getFullYear(),calM=new Date().getMonth(),calD="",ready=false,later=false,cloudMsg="",role=null,tab="venta",msg="",bad=false,conf=false,sel={},fb=null,bell=false,inv=false,pd=false,who=null,delId=null,resp="",cnt={};
+let instalar=null,lr="admin",showP=false,atab="resumen",calY=new Date().getFullYear(),calM=new Date().getMonth(),calD="",ready=false,later=false,cloudMsg="",role=null,tab="venta",msg="",bad=false,conf=false,sel={},fb=null,bell=false,inv=false,pd=false,who=null,delId=null,resp="",cnt={};
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}if(window.cloudSave)window.cloudSave()};
 const fm=n=>{n=Math.round(+n||0);return (n<0?"-":"")+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,".")};
 const cop=n=>(n<0?"-$":"$")+fm(Math.abs(n));
@@ -88,7 +95,7 @@ function alerts(){const G={};S.products.filter(isLow).forEach(p=>(G[cat(p)]=G[ca
 function render(){
  const a=$("app");
  if(role&&!ready){a.innerHTML=`<div class="hero"><div><h1>🥤 Inventario de bebidas</h1><small>☁️ Conectando con la nube…</small></div></div><div class="card"><p>Cargando el inventario compartido.</p>${cloudMsg?`<p class="msg err">${esc(cloudMsg)}</p>`:`<p class="k">Si tarda mucho, revisa la conexión a internet.</p>`}</div>`;return}
- if(!role){a.innerHTML=`<div class="hero"><div><h1>🥤 Inventario de bebidas</h1><small>Entra con tu rol y tu contraseña</small></div></div><div class="card"><div class="step"><b>1</b>Elige quién eres</div><select id="r" onchange="setLr(this.value)"><option value="admin" ${lr=="admin"?"selected":""}>👑 Administrador</option><option value="encargado" ${lr=="encargado"?"selected":""}>📋 Encargado</option></select><div class="step" style="margin-top:14px"><b>2</b>Escribe tu contraseña</div><div style="display:flex;gap:8px"><input id="p" type="${showP?"text":"password"}" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Contraseña" style="flex:1"><button class="g sm" type="button" onclick="togP()" aria-label="Mostrar u ocultar la contraseña">${showP?"🙈":"👁️"}</button></div><div class="k" style="margin-top:6px">Correo en Firebase: <b id="em">${LOGIN_EMAIL[lr]}</b></div>${msg?`<p class="msg err">${msg}</p>`:""}<br><br><button class="big" onclick="login()">Entrar</button></div>`;setTimeout(()=>$("p")&&$("p").focus(),0);return}
+ if(!role){a.innerHTML=`<div class="hero"><div><h1>🥤 Inventario de bebidas</h1><small>Entra con tu rol y tu contraseña</small></div></div><div class="card"><div class="step"><b>1</b>Elige quién eres</div><select id="r" onchange="setLr(this.value)"><option value="admin" ${lr=="admin"?"selected":""}>👑 Administrador</option><option value="encargado" ${lr=="encargado"?"selected":""}>📋 Encargado</option></select><div class="step" style="margin-top:14px"><b>2</b>Escribe tu contraseña</div><div style="display:flex;gap:8px"><input id="p" type="${showP?"text":"password"}" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Contraseña" style="flex:1"><button class="g sm" type="button" onclick="togP()" aria-label="Mostrar u ocultar la contraseña">${showP?"🙈":"👁️"}</button></div><div class="k" style="margin-top:6px">Correo en Firebase: <b id="em">${LOGIN_EMAIL[lr]}</b></div>${msg?`<p class="msg err">${msg}</p>`:""}<br><br><button class="big" onclick="login()">Entrar</button>${instalarHTML()}</div>`;setTimeout(()=>$("p")&&$("p").focus(),0);return}
  a.innerHTML=`<div class="hero"><div><h1>${role=="admin"?"👑 Administrador":"📋 Encargado"}</h1><small>${fdate(today())}</small></div><div style="display:flex;gap:8px;align-items:center">${role=="admin"?`<button class="bell" aria-label="Alertas de insumos" aria-expanded="${bell}" onclick="togBell()">🔔${nAl()?`<i>${nAl()}</i>`:""}</button>`:""}<button class="bell" aria-label="Inventario de turnos" aria-expanded="${inv}" onclick="togInv()">📋${lastBad()?`<i>!</i>`:""}</button><button class="bell" aria-label="Pagos pendientes" aria-expanded="${pd}" onclick="togPd()">💳${pend().length?`<i>${pend().length}</i>`:""}</button><button class="g" style="color:#fff;border-color:#fff" onclick="salir()">Salir</button></div></div>${role=="admin"&&bell?`<div class="bp">${alerts()||"Todo bien surtido ✅"}</div>`:""}${inv?`<div class="bp inv">${invPanel()}</div>`:""}${pd?`<div class="bp inv"><b>💳 Pagos pendientes</b>${pendHTML(role=="admin")}</div>`:""}`+(role=="admin"?admin():enc());
  if(tab=="nevera"&&role=="encargado")S.products.forEach(p=>{if($("cn"+p.id))st(p.id)});
  if(fb){const e=$(fb);if(e)e.focus();fb=null}else if(role!=="admin"&&tab!="nevera")setTimeout(()=>{const f=document.querySelector(".card input,.card select");if(f)f.focus()},0);
@@ -123,6 +130,13 @@ function giftIds(l){if(role!="admin")return;let n=0;l.split(",").forEach(i=>{con
 const LOGIN_EMAIL={admin:"administrador@inventario.app",encargado:"encargado@inventario.app"};
 function setLr(v){lr=v;const e=$("em");if(e)e.textContent=LOGIN_EMAIL[v]}
 function togP(){const v=$("p").value;showP=!showP;render();const e=$("p");e.value=v;e.focus()}
+function instalarHTML(){if((window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone)return "";
+ if(instalar)return `<div style="margin-top:12px"><button class="g big" onclick="instalarApp()">📲 Instalar en el teléfono</button></div>`;
+ if(/iphone|ipad|ipod/i.test(navigator.userAgent))return `<p class="k" style="margin-top:12px">📲 Para instalarla en iPhone: toca Compartir y luego “Agregar a pantalla de inicio”.</p>`;return ""}
+async function instalarApp(){if(!instalar)return;instalar.prompt();try{await instalar.userChoice}catch(e){}instalar=null;render()}
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();instalar=e;if(!role)render()});
+window.addEventListener("appinstalled",()=>{instalar=null;if(!role)render()});
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 async function login(){const r=$("r").value,p=$("p").value;lr=r;
  if(!p){msg="Escribe la contraseña";return render()}
  try{await window.cloudLogin(r,p);msg=""}catch(e){const c=e&&e.code||"";
